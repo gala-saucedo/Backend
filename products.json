@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Laptop",
+    "description": "Una laptop potente",
+    "price": 1200,
+    "thumbnail": "laptop.jpg",
+    "code": "LT001",
+    "stock": 10
+  },
+  {
+    "id": 2,
+    "title": "Teléfono",
+    "description": "Un teléfono inteligente",
+    "price": 500,
+    "thumbnail": "telefono.jpg",
+    "code": "TP001",
+    "stock": 20
+  },
+  {
+    "id": 3,
+    "title": "Tablet",
+    "description": "Una tablet compacta",
+    "price": 300,
+    "thumbnail": "tablet.jpg",
+    "code": "TB001",
+    "stock": 15
+  }
+]
