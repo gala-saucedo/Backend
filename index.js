@@ -38,7 +38,7 @@ class ProductManager extends EventEmitter {
         product.id = this.products.length + 1
 
         this.products.push(product)
-        this.emit('productAdded', product); // Emitir evento cuando se agrega un producto
+        this.emit('productAdded', product)
         console.log("Producto agregado exitosamente.")
 
         // Guardar productos en un archivo
@@ -176,3 +176,7 @@ if (updatedProduct) {
 main().catch(error => {
     console.error("Error en la ejecución principal:", error);
 });
+
+const {ProductManager} = require (`./ProductManager`)
+module.exports = {ProductManager}
+
