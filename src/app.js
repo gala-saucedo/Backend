@@ -1,80 +1,49 @@
-const fs = require(`fs`)
-
-const express = require(`express`)
-
-const { ProductManager } = require('./index');
-
+const express = require('express')
 const app = express()
-
-const manager = new ProductManager();
-
-async function main() {
-
-    // Cargar productos desde el archivo (si existe)
-    await manager.loadProductsFromFile();
-
-    // Agregar algunos productos
-    await manager.addProduct(new Product("Laptop", "Una laptop potente", 1000, "laptop.jpg", "LT001", 10));
-    await manager.addProduct(new Product("Teléfono", "Un teléfono inteligente", 500, "telefono.jpg", "TP001", 20));
-    await manager.addProduct(new Product("Tablet", "Una tablet compacta", 300, "tablet.jpg", "TB001", 15));
-
-    // Actualizar el precio del producto con ID 1
-    const updatedProduct = await manager.updateProduct(1, { price: 1200 });
-    if (updatedProduct) {
-        console.log("Producto actualizado:", updatedProduct);
-    } else {
-        console.log("Producto no encontrado.");
-    }
-}
-
-main().catch(error => {
-    console.error("Error en la ejecución principal:", error);
-});
-
-app.get(`/saludo`, (req, res) => {
-    res.end(`Hola mundo desdes express`)
-})
-
-app.listen(3000, () => {
-    console.log(`servidor listo`)
-})
-
-app.get('/products', async (req, res) => {
-    try {
-        // Obtener el parámetro 'limit' de la query
-        const limit = req.query.limit ? parseInt(req.query.limit) : null;
-
-        // Obtener los productos del ProductManager
-        const products = await manager.getProductsFromFile();
-
-        // Limitar la cantidad de productos si se proporciona el parámetro 'limit'
-        const limitedProducts = limit ? products.slice(0, limit) : products;
-
-        // Devolver los productos como objeto JSON
-        res.json(limitedProducts);
-    } catch (error) {
-        console.error("Error al obtener los productos:", error);
-        res.status(500).json({ error: "Error al obtener los productos" });
+const multer = require('multer')
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, `${__dirname}/../files`)
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname + '__test')
     }
 })
+const uploader = multer({ storage })
 
-app.get('/products/:pid', async (req, res) => {
-    try {
-        // Obtener el parámetro 'pid' de los parámetros de la ruta
-        const productId = parseInt(req.params.pid);
+app.use(express.static(`${__dirname}/../public`))
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
 
-        // Obtener el producto del ProductManager
-        const product = await manager.getProductById(productId);
+const products = []
+let idCounter = 1
 
-        if (product) {
-            // Devolver el producto como objeto JSON
-            res.json(product);
-        } else {
-            res.status(404).json({ error: "Producto no encontrado" });
-        }
-    } catch (error) {
-        console.error("Error al obtener el producto:", error);
-        res.status(500).json({ error: "Error al obtener el producto" });
+app.get('/api/products', (req, res) => {
+    res.status(200).json(products)
+})
+
+app.post('/api/products', uploader.array('thumbnails', 5), (req, res) => {
+    const newProduct = {
+        id: idCounter++,
+        title: req.body.title,
+        description: req.body.description,
+        code: req.body.code,
+        price: req.body.price,
+        status: req.body.status !== undefined ? req.body.status : true,
+        stock: req.body.stock,
+        category: req.body.category,
+        thumbnails: req.files.map(file => file.filename)
     }
-});
 
+    products.push(newProduct)
+    res.status(201).json(newProduct)
+})
+
+// Importa el enrutador de carritos
+const cartRouter = require('./routes/cart.router')
+// Agrega el enrutador de carritos como middleware
+app.use('/api/carts', cartRouter)
+
+app.listen(8080, () => {
+    console.log('Servidor listo!')
+})
