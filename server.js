@@ -1,9 +1,11 @@
+const express = require('express')
+const app = express()
 const http = require(`http`)
 
-const server = http.createServer((req, res) => {
+app.get('/', (req, res) => {
     res.end(`hola mundo, soy gala`)
 })
 
-server. listen(3000, () =>{
-    console.log(`servidor listo`)
+app.listen(8080, () => {
+    console.log(`Servidor listo`)
 })
