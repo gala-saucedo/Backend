@@ -1,7 +1,7 @@
 const { Router } = require('express')
 const router = Router()
-
-const carts = [] // Lista de carritos
+const CartManager = require('../managers/cartManager');
+const cartManager = new CartManager();
 
 router.post('/', (req, res) => {
     const newCart = {
@@ -9,40 +9,39 @@ router.post('/', (req, res) => {
         products: req.body.products || [] // Array de objetos con los productos
     }
 
-    carts.push(newCart)
-    res.status(201).json(newCart)
-})
+    cartManager.addCart(newCart);
+    res.status(201).json(newCart);
+});
 
 router.get('/:cid', (req, res) => {
-    const cid = parseInt(req.params.cid)
-    const cart = carts.find(cart => cart.id === cid)
+    const cid = parseInt(req.params.cid);
+    const cart = cartManager.getCartById(cid);
     if (!cart) {
-        return res.status(404).json({ message: 'Cart not found' })
+        return res.status(404).json({ message: 'Cart not found' });
     }
 
-    res.status(200).json(cart.products)
+    res.status(200).json(cart.products);
 });
 
 router.post('/:cid/product/:pid', (req, res) => {
-    const cid = parseInt(req.params.cid)
-    const pid = parseInt(req.params.pid)
-    const cartIndex = carts.findIndex(cart => cart.id === cid)
-    if (cartIndex === -1) {
-        return res.status(404).json({ message: 'Cart not found' })
+    const cid = parseInt(req.params.cid);
+    const pid = parseInt(req.params.pid);
+    const cart = cartManager.getCartById(cid);
+    if (!cart) {
+        return res.status(404).json({ message: 'Cart not found' });
     }
 
-    const cart = carts[cartIndex]
-    const existingProductIndex = cart.products.findIndex(product => product.pid === pid)
+    const existingProduct = cart.products.find(product => product.pid === pid);
 
-    if (existingProductIndex !== -1) {
+    if (existingProduct) {
         // Si el producto ya existe en el carrito, incrementar la cantidad
-        cart.products[existingProductIndex].quantity++
+        existingProduct.quantity++;
     } else {
         // Si el producto no existe en el carrito, agregarlo con cantidad 1
-        cart.products.push({ pid, quantity: 1 })
+        cart.products.push({ pid, quantity: 1 });
     }
 
-    res.status(200).json({ message: 'Product added to cart' })
-})
+    res.status(200).json({ message: 'Product added to cart' });
+});
 
 module.exports = router
