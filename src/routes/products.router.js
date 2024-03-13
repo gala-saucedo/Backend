@@ -1,23 +1,46 @@
-const { Router } = require('express');
-const router = Router();
-const ProductManager = require('../managers/productManager');
-const productManager = new ProductManager();
+const { Router } = require('express')
+const router = Router()
+const ProductManager = require('../managers/productManager')
+const productManager = new ProductManager()
 
-router.post('/', (req, res) => {
-    // Utilizamos el productManager para agregar un nuevo producto
-    const newProduct = {
-        id: Math.floor(Math.random() * 1000), // Genera un ID único
-        title: req.body.title,
-        description: req.body.description,
-        code: req.body.code,
-        price: req.body.price,
-        status: req.body.status === undefined ? true : req.body.status,
-        stock: req.body.stock,
-        category: req.body.category,
-        thumbnails: req.body.thumbnails || [] // Array de strings con las rutas de las imágenes
-    };
+// GET /api/products
+router.get('/', (req, res) => {
+    const products = productManager.getAllProducts()
+    res.status(200).json(products)
+})
 
-    productManager.addProduct(newProduct);
-    res.status(201).json(newProduct);
-});
+// GET /api/products/:productId
+router.get('/:productId', (req, res) => {
+    const productId = parseInt(req.params.productId)
+    const product = productManager.getProductById(productId)
+    if (product) {
+        res.status(200).json(product)
+    } else {
+        res.status(404).json({ message: 'Product not found' })
+    }
+})
 
+// PUT /api/products/:productId
+router.put('/:productId', (req, res) => {
+    const productId = parseInt(req.params.productId)
+    const updatedProduct = req.body
+    const success = productManager.updateProduct(productId, updatedProduct)
+    if (success) {
+        res.status(200).json({ message: 'Product updated' })
+    } else {
+        res.status(404).json({ message: 'Product not found' })
+    }
+})
+
+// DELETE /api/products/:productId
+router.delete('/:productId', (req, res) => {
+    const productId = parseInt(req.params.productId)
+    const success = productManager.deleteProduct(productId)
+    if (success) {
+        res.status(200).json({ message: 'Product deleted' })
+    } else {
+        res.status(404).json({ message: 'Product not found' })
+    }
+})
+
+module.exports = router
