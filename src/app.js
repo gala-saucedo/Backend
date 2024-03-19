@@ -1,18 +1,49 @@
 const express = require('express')
+const http = require('http')
+const exphbs = require('express-handlebars')
+const ProductManager = require('./managers/productManager')
+const socketIo = require('socket.io'); // Importa Socket.IO
+
 const app = express()
-const productsRouter = require('./routes/products.router')
-const cartRouter = require('./routes/cart.router')
+const server = http.createServer(app)
+const io = socketIo(server)
 
-app.use(express.static(`${__dirname}/../public`))
-app.use(express.urlencoded({ extended: true }))
-app.use(express.json())
+const productManager = new ProductManager('./data/products.json')
 
-// Rutas de productos
-app.use('/api/products', productsRouter)
+// Configuración de Handlebars
+app.engine('handlebars', exphbs())
+app.set('view engine', 'handlebars')
 
-// Rutas de carritos
-app.use('/api/carts', cartRouter)
+// Middleware para servir archivos estáticos
+app.use(express.static('public'))
 
-app.listen(8080, () => {
-    console.log('Servidor listo!')
-});
+// Ruta para renderizar la vista realTimeProducts.handlebars
+app.get('/realtimeproducts', async (req, res) => {
+    try {
+        const products = await productManager.getAllProducts()
+        res.render('realTimeProducts', { products })
+    } catch (error) {
+        console.error('Error al obtener la lista de productos:', error)
+        res.status(500).send('Error interno del servidor')
+    }
+})
+
+// WebSockets
+io.on('connection', (socket) => {
+    console.log('Usuario conectado')
+
+    // Emitir la lista de productos cuando un usuario se conecta
+    socket.emit('products', productManager.getAllProducts())
+
+    // Escuchar eventos para actualizar la lista de productos
+    socket.on('updateProducts', async () => {
+        const products = await productManager.getAllProducts()
+        io.emit('products', products) // Emitir la lista actualizada a todos los clientes
+    })
+})
+
+// Iniciar el servidor
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`)
+})

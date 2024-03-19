@@ -3,16 +3,14 @@ const router = Router()
 const ProductManager = require('../managers/productManager')
 const productManager = new ProductManager()
 
-// GET /api/products
-router.get('/', (req, res) => {
-    const products = productManager.getAllProducts()
+router.get('/', async (req, res) => {
+    const products = await productManager.getAllProducts()
     res.status(200).json(products)
 })
 
-// GET /api/products/:productId
-router.get('/:productId', (req, res) => {
+router.get('/:productId', async (req, res) => {
     const productId = parseInt(req.params.productId)
-    const product = productManager.getProductById(productId)
+    const product = await productManager.getProductById(productId)
     if (product) {
         res.status(200).json(product)
     } else {
@@ -20,11 +18,10 @@ router.get('/:productId', (req, res) => {
     }
 })
 
-// PUT /api/products/:productId
-router.put('/:productId', (req, res) => {
+router.put('/:productId', async (req, res) => {
     const productId = parseInt(req.params.productId)
     const updatedProduct = req.body
-    const success = productManager.updateProduct(productId, updatedProduct)
+    const success = await productManager.updateProduct(productId, updatedProduct)
     if (success) {
         res.status(200).json({ message: 'Product updated' })
     } else {
@@ -32,12 +29,13 @@ router.put('/:productId', (req, res) => {
     }
 })
 
-// DELETE /api/products/:productId
-router.delete('/:productId', (req, res) => {
+router.delete('/:productId', async (req, res) => {
     const productId = parseInt(req.params.productId)
-    const success = productManager.deleteProduct(productId)
+    const deletedProduct = await productManager.getProductById(productId)
+    const success = await productManager.deleteProduct(productId)
     if (success) {
         res.status(200).json({ message: 'Product deleted' })
+        io.emit('deleteProduct', deletedProduct); // Emitir evento de WebSocket al eliminar un producto
     } else {
         res.status(404).json({ message: 'Product not found' })
     }

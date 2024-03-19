@@ -5,9 +5,29 @@ class CartManager {
         this.filePath = filePath
     }
 
-    async addCart(cart) {
+    async addCart(cartId, productId, quantity) {
         const carts = await this.getAllCarts()
-        carts.push(cart)
+        const cartIndex = carts.findIndex(cart => cart.id === cartId)
+        if (cartIndex === -1) {
+            // Si el carrito no existe, se crea uno nuevo
+            const newCart = {
+                id: cartId,
+                products: [{ productId, quantity }]
+            }
+            carts.push(newCart)
+        } else {
+            // Si el carrito ya existe, se agrega el producto al carrito existente
+            const products = carts[cartIndex].products
+            const productIndex = products.findIndex(product => product.productId === productId)
+            if (productIndex !== -1) {
+                // Si el producto ya existe en el carrito, se incrementa la cantidad
+                products[productIndex].quantity += quantity
+            } else {
+                // Si el producto no existe en el carrito, se agrega con la cantidad especificada
+                products.push({ productId, quantity })
+            }
+        }
+
         await this.saveCarts(carts)
     }
 
