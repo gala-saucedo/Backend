@@ -6,6 +6,14 @@ class CartManager {
     }
 
     async addCart(cartId, productId, quantity) {
+
+        if (typeof productId !== 'number' || productId <= 0) {
+            throw new Error('productId debe ser un número entero positivo')
+        }
+    
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+            throw new Error('quantity debe ser un número entero positivo')
+        }
         const carts = await this.getAllCarts()
         const cartIndex = carts.findIndex(cart => cart.id === cartId)
         if (cartIndex === -1) {

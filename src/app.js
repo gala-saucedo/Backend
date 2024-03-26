@@ -2,7 +2,7 @@ const express = require('express')
 const http = require('http')
 const exphbs = require('express-handlebars')
 const ProductManager = require('./managers/productManager')
-const socketIo = require('socket.io'); // Importa Socket.IO
+const socketIo = require('socket.io')
 
 const app = express()
 const server = http.createServer(app)
@@ -17,7 +17,6 @@ app.set('view engine', 'handlebars')
 // Middleware para servir archivos estáticos
 app.use(express.static('public'))
 
-// Ruta para renderizar la vista realTimeProducts.handlebars
 app.get('/realtimeproducts', async (req, res) => {
     try {
         const products = await productManager.getAllProducts()
@@ -43,7 +42,7 @@ io.on('connection', (socket) => {
 })
 
 // Iniciar el servidor
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080
 server.listen(PORT, () => {
     console.log(`Servidor escuchando en el puerto ${PORT}`)
 })
