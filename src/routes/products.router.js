@@ -70,5 +70,3 @@ router.delete("/:id", async (req, res) => {
 })
 
 module.exports = router
-
-// el profe dijo que hay que hacer que la logica cree un codigo el "code"
