@@ -1,5 +1,6 @@
 const fs = require("fs")
 const path = "./dbjson/productsDb.json"
+const { v4: uuidv4 } = require("uuid")
 
 class ProductsManagerFs {
     constructor () {
@@ -26,23 +27,36 @@ class ProductsManagerFs {
         return product || null
     }
 
-    createProducts = async newProduct => {
+    createProducts = async (newProduct) => {
         try {
             const products = await this.readProducts()
+            newProduct.id = uuidv4()  // General un unico ID 
+            newProduct.status = true 
 
-            if(products.length === 0){
-                newProduct.id =1
-            }else {
-                newProduct.id = products[products.length-1].id + 1
+            //Validar campos obligatorios
+            const requiredFields = ["title", "description", "code", "price", "stock", "category"]
+            for (const field of requiredFields) {
+                if (!newProduct[field]) {
+                    throw new Error(`Falta este campo obligatorio: ${field}`)
+                }
+            }
+            if (typeof newProduct.title !== 'string' ||
+                typeof newProduct.description !== 'string' ||
+                typeof newProduct.code !== 'string' ||
+                typeof newProduct.price !== 'number' ||
+                typeof newProduct.stock !== 'number' ||
+                !Array.isArray(newProduct.category) ||
+                !newProduct.category.every(item => typeof item === "string")) {
+                throw new Error('Tipo de dato invalido')
             }
 
             products.push(newProduct)
-
-            await fs.promises.writeFile(path, JSON.stringify(products, null, "\t"))
+            await fs.promises.writeFile(this.path, JSON.stringify(products, null, "\t"))
             return newProduct
 
         } catch (error) {
             console.log(error)
+            throw new Error("Error al crear el producto")
         }
     }
 

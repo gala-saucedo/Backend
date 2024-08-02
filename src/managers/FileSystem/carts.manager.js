@@ -5,13 +5,16 @@ class CartManagerFs{
     constructor(){
         this.path = this.path
     }
-    readCart = async() =>{
+    readCart = async () => {
         try {
-            const cartsJson = await fs.promises.readFile(path, "utf-8")
-            const cartsJs = JSON.parse(cartsJson)
-            return cartsJs
+            if (fs.existsSync(this.path)) {
+                const cartsJson = await fs.promises.readFile(this.path, "utf-8")
+                return JSON.parse(cartsJson)
+            }
+            return []
         } catch (error) {
-            return[]
+            console.log("Error", error)
+            return []
         }
     }
     createCart = async () => {
