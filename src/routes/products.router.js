@@ -1,6 +1,5 @@
 const { Router } = require("express")
 const ProductsManagerFs = require("../managers/FileSystem/products.manager.js")
-
 const router = Router()
 const productsManagerFs = new ProductsManagerFs()
 
@@ -40,6 +39,20 @@ router.post("/", async(req, res) =>{
         console.log(error)
         res.status(500).send({ status: "error", error: "Error al crear el producto"})
     }
+})
+
+// Crear un producto 
+router.post("/", async (req, res) => {
+    await productsManagerFs.addProduct(req.body)
+    req.app.get("socketio").emit("newProduct") 
+    res.status(201).send("Producto creado")
+})
+
+// Eliminar un producto
+router.delete("/:id", async (req, res) => {
+    await productsManagerFs.deleteProduct(req.params.id)
+    req.app.get("socketio").emit("deleteProduct") 
+    res.status(200).send("Producto eliminado")
 })
 
 // PUT que actualiza un producto
