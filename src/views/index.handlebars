@@ -1,6 +1,50 @@
 <main>
-    <h1>Bienvenidos a Socket</h1>
+    <h1>Productos</h1>
+
+    {{#if payload.length}}
+        <ul>
+            {{#each payload}}
+            <li>
+                <h3>{{this.title}}</h3>
+                <p>Precio: ${{this.price}}</p>
+                <p>Categoría: {{this.category}}</p>
+                <a href="/products/{{this._id}}">Ver detalles</a>
+                <button onclick="agregarAlCarrito('{{this._id}}')">Agregar al carrito</button>
+            </li>
+            {{/each}}
+        </ul>
+        <nav>
+            {{#if hasPrevPage}}
+                <a href="?page={{prevPage}}&limit={{limit}}">Anterior</a>
+            {{/if}}
+
+            Página {{page}} de {{totalPages}}
+
+            {{#if hasNextPage}}
+                <a href="?page={{nextPage}}&limit={{limit}}">Siguiente</a>
+            {{/if}}
+        </nav>
+    {{else}}
+        <p>No hay productos disponibles.</p>
+    {{/if}}
+</main>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/static/assets/js/index.js"></script>
-</main>
+
+<script>
+    function agregarAlCarrito(productId) {
+        fetch(`/api/carts/add-product`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert("Producto agregado al carrito");
+        })
+        .catch(error => console.error("Error al agregar el producto al carrito:", error));
+    }
+</script>

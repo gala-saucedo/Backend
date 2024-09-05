@@ -3,16 +3,65 @@ const ProductsManagerFs = require("../managers/FileSystem/products.manager.js")
 const router = Router()
 const productsManagerFs = new ProductsManagerFs()
 
-// GET que trae todos los productos
-router.get("/", async (req, res) =>{
+// GET que trae todos los productos con paginación, filtros, y ordenamiento
+router.get("/", async (req, res) => {
     try {
-        const productsDb = await productsManagerFs.getProducts()
-        res.send({status: "success", data: productsDb})
-    } catch (error) {       
+        const { limit = 10, page = 1, sort, query } = req.query
+
+        // Convertir limit y page a enteros
+        const limitInt = parseInt(limit)
+        const pageInt = parseInt(page)
+
+        // Obtener todos los productos
+        let products = await productsManagerFs.getProducts()
+        console.log(products)
+
+        // Filtrar por query si es necesario
+        if (query) {
+            products = products.filter(product => product.type === query)
+        }
+
+        // Ordenar por precio si sort está definido
+        if (sort) {
+            products.sort((a, b) => {
+                if (sort === 'asc') return a.price - b.price
+                if (sort === 'desc') return b.price - a.price
+                return 0
+            })
+        }
+
+        // Implementar paginación
+        const totalProducts = products.length
+        const totalPages = Math.ceil(totalProducts / limitInt)
+        const paginatedProducts = products.slice((pageInt - 1) * limitInt, pageInt * limitInt)
+
+        // Crear links para la navegación entre páginas
+        const hasPrevPage = pageInt > 1
+        const hasNextPage = pageInt < totalPages
+        const prevPage = hasPrevPage ? pageInt - 1 : null
+        const nextPage = hasNextPage ? pageInt + 1 : null
+        const prevLink = hasPrevPage ? `?limit=${limitInt}&page=${prevPage}&sort=${sort}&query=${query}` : null
+        const nextLink = hasNextPage ? `?limit=${limitInt}&page=${nextPage}&sort=${sort}&query=${query}` : null
+
+        // Devolver el resultado en el formato solicitado
+        res.send({
+            status: 'success',
+            payload: paginatedProducts,
+            totalPages: totalPages,
+            prevPage: prevPage,
+            nextPage: nextPage,
+            page: pageInt,
+            hasPrevPage: hasPrevPage,
+            hasNextPage: hasNextPage,
+            prevLink: prevLink,
+            nextLink: nextLink
+        })
+    } catch (error) {
         console.log(error)
-        res.status(500).send({ status: "error", error: "Error al obtener los productos"})
+        res.status(500).send({ status: "error", error: "Error al obtener los productos" })
     }
 })
+
 
 // GET que trae un producto por id
 router.get("/:id", async (req, res) => {
@@ -29,30 +78,11 @@ router.get("/:id", async (req, res) => {
     }
 })
 
-// POST que crea un nuevo producto
-router.post("/", async(req, res) =>{
-    try {
-        const { body } = req
-        const response = await productsManagerFs.createProducts(body)
-        res.send({status: "success", data: response})
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({ status: "error", error: "Error al crear el producto"})
-    }
-})
-
-// Crear un producto 
+// POST que crea un producto 
 router.post("/", async (req, res) => {
     await productsManagerFs.addProduct(req.body)
     req.app.get("socketio").emit("newProduct") 
     res.status(201).send("Producto creado")
-})
-
-// Eliminar un producto
-router.delete("/:id", async (req, res) => {
-    await productsManagerFs.deleteProduct(req.params.id)
-    req.app.get("socketio").emit("deleteProduct") 
-    res.status(200).send("Producto eliminado")
 })
 
 // PUT que actualiza un producto

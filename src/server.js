@@ -2,15 +2,16 @@ const express = require("express")
 const userRouter = require("./routes/users.router.js")
 const productRouter = require("./routes/products.router.js")
 const cartRouter = require("./routes/carts.router.js")
-const pruebaRouter = require("./routes/pruebas.router.js")
 const viewsRouter = require("./routes/views.router.js")
 const { create } = require("express-handlebars")
 const path = require("path")
 
 const { Server } = require("socket.io")
+const { connectDB } = require ("./config/index.js")
 
 const app = express()
 const PORT = 8080
+connectDB()
 
 const logger = require("morgan")
 const { uploader } = require("./utils/multer.js")
@@ -34,8 +35,6 @@ app.set("view engine", "handlebars")
 app.use("/api/users", userRouter)
 app.use("/api/products", productRouter)
 app.use("/api/carts", cartRouter)
-// prueba
-app.use("/pruebas", pruebaRouter)
 app.use("/", viewsRouter)
 
 app.use((error, req, res, next) => {
