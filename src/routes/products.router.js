@@ -3,6 +3,10 @@ const ProductsManagerFs = require("../managers/FileSystem/products.manager.js")
 const router = Router()
 const productsManagerFs = new ProductsManagerFs()
 
+const useMongo = false
+
+const productsManager = useMongo ? new ProductsManagerMongo() : new ProductsManagerFs(); 
+
 // GET que trae todos los productos con paginación, filtros, y ordenamiento
 router.get("/", async (req, res) => {
     try {

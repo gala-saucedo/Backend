@@ -9,6 +9,9 @@ const path = require("path")
 const { Server } = require("socket.io")
 const { connectDB } = require ("./config/index.js")
 
+const ProductsManagerFs = require("./managers/FileSystem/products.manager.js")
+const ProductsManagerMongo = require("./managers/products.manager.mongo.js")
+
 const app = express()
 const PORT = 8080
 connectDB()
@@ -30,6 +33,9 @@ const hbs = create({
 app.engine("handlebars", hbs.engine)
 app.set("views", path.join(__dirname, "/views"))
 app.set("view engine", "handlebars")
+
+const useMongo = false
+const productsManager = useMongo ? new ProductsManagerMongo() : new ProductsManagerFs()
 
 // rutas para usuarios, productos y carritos
 app.use("/api/users", userRouter)
@@ -61,7 +67,7 @@ io.on("connection", (socket) => {
 
     // Escuchar cuando se elimine un producto
     socket.on("deleteProduct", async () => {
-        const products = await productsManagerFs.getProducts()
+        const products = await productsManager.getProducts()
         io.emit("updateProducts", products) // Envía los productos actualizados a todos los clientes
     })
 
